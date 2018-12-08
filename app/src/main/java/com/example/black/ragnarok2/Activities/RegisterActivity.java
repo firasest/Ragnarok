@@ -1,19 +1,28 @@
-package com.example.black.ragnarok2;
+package com.example.black.ragnarok2.Activities;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.black.ragnarok2.AppSingleton;
+import com.example.black.ragnarok2.R;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.HashMap;
@@ -21,11 +30,12 @@ import java.util.Map;
 
 
 public class RegisterActivity extends AppCompatActivity {
-
+    static int PreqCode =1;
+    static int REQUESTCODE=1;
     private static final String TAG = "RegisterActivity";
     private static final String URL_FOR_REGISTRATION = "http://ragnarok2-56708.firebaseapp.com/ragnarok/login.php";
     ProgressDialog progressDialog;
-
+    private ImageView userPhoto;
     private EditText signupInputName, signupInputEmail, signupInputPassword, signupInputAge;
     private Button btnSignUp;
     private Button btnLinkLogin;
@@ -46,6 +56,18 @@ public class RegisterActivity extends AppCompatActivity {
 
         btnSignUp = findViewById(R.id.btn_signup);
         btnLinkLogin = findViewById(R.id.btn_link_login);
+        userPhoto = findViewById(R.id.avatar);
+        userPhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                    if (Build.VERSION.SDK_INT >= 22){
+                        checkAndRequestForPermission();
+                    }else {
+                        openGallery();
+                    }
+                 }
+             });
+
 
         genderRadioGroup = findViewById(R.id.gender_radio_group);
         btnSignUp.setOnClickListener(new View.OnClickListener() {
@@ -62,6 +84,23 @@ public class RegisterActivity extends AppCompatActivity {
                 startActivity(i);
             }
         });
+    }
+
+    private void openGallery() {
+         Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
+         galleryIntent.setType("Image/*");
+         startActivityForResult(galleryIntent,REQUESTCODE);
+    }
+
+    private void checkAndRequestForPermission() {
+        if (ContextCompat.checkSelfPermission(  RegisterActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+            if (ActivityCompat.shouldShowRequestPermissionRationale(RegisterActivity.this,Manifest.permission.READ_EXTERNAL_STORAGE)){
+                Toast.makeText(RegisterActivity.this,"Please accept for required permission",Toast.LENGTH_SHORT).show();
+
+            }else {
+                ActivityCompat.requestPermissions(RegisterActivity.this, new String[](Manifest.permission.READ_EXTERNAL_STORAGE),PreqCode);
+            }
+        }
     }
 
     private void submitForm() {
@@ -93,7 +132,7 @@ public class RegisterActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(String response) {
-                Log.d(TAG, "Register Response: " + response.toString());
+                Log.d(TAG, "Register Response: " + response);
                 hideDialog();
 
                 try {

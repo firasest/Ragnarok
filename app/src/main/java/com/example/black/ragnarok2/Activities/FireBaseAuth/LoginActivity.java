@@ -1,4 +1,4 @@
-package com.example.black.ragnarok2.Activities;
+package com.example.black.ragnarok2.Activities.FireBaseAuth;
 
 import android.app.ProgressDialog;
 import android.support.annotation.NonNull;
@@ -79,7 +79,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        Intent messenger = new Intent(getApplicationContext(),Messenger.class);
+        Intent messenger = new Intent(getApplicationContext(), com.example.black.ragnarok2.Activities.HomeAndMessenger.Messenger.class);
         startActivity(messenger);
         finish();
     }

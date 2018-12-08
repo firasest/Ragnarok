@@ -1,4 +1,4 @@
-package com.example.black.ragnarok2.Activities;
+package com.example.black.ragnarok2.Activities.FireBaseAuth;
 
 
 

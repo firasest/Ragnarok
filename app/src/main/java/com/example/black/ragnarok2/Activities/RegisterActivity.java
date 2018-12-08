@@ -158,8 +158,8 @@ ProgressDialog progressDialog;
     }
 
     private void updateUI() {
-        Intent messenger = new Intent(getApplicationContext(),Messenger.class);
-        startActivity(messenger);
+        Intent login = new Intent(getApplicationContext(),LoginActivity.class);
+        startActivity(login);
         finish();
 
     }

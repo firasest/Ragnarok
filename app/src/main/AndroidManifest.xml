@@ -22,7 +22,8 @@
         <activity
             android:name=".HomeWithDrawer"
             android:label="@string/title_activity_home_with_drawer"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
     </application>
 
 </manifest>

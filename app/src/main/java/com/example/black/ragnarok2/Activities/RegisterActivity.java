@@ -4,8 +4,11 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -16,30 +19,34 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.Toast;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.example.black.ragnarok2.AppSingleton;
 import com.example.black.ragnarok2.R;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class RegisterActivity extends AppCompatActivity {
-    static int PreqCode =1;
-    static int REQUESTCODE=1;
-    private static final String TAG = "RegisterActivity";
-    private static final String URL_FOR_REGISTRATION = "http://ragnarok2-56708.firebaseapp.com/ragnarok/login.php";
-    ProgressDialog progressDialog;
+    private Uri pickedImage;
+    private static int PreqCode =1;
+    private static int REQUESTCODE=1;
+ProgressDialog progressDialog;
     private ImageView userPhoto;
     private EditText signupInputName, signupInputEmail, signupInputPassword, signupInputAge;
     private Button btnSignUp;
     private Button btnLinkLogin;
     private RadioGroup genderRadioGroup;
+    private FirebaseAuth fAuth;
+
+    public RegisterActivity() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +60,7 @@ public class RegisterActivity extends AppCompatActivity {
         signupInputEmail = findViewById(R.id.signup_input_email);
         signupInputPassword = findViewById(R.id.signup_input_password);
         signupInputAge = findViewById(R.id.signup_input_age);
-
+        fAuth = FirebaseAuth.getInstance();
         btnSignUp = findViewById(R.id.btn_signup);
         btnLinkLogin = findViewById(R.id.btn_link_login);
         userPhoto = findViewById(R.id.avatar);
@@ -73,7 +80,24 @@ public class RegisterActivity extends AppCompatActivity {
         btnSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                submitForm();
+                btnSignUp.setVisibility(View.INVISIBLE);
+                int selectedId = genderRadioGroup.getCheckedRadioButtonId();
+                String gender;
+                if(selectedId == R.id.female_radio_btn)
+                    gender = "Female";
+                else
+                    gender = "Male";
+                final String mail = signupInputEmail.getText().toString();
+                final String name = signupInputName.getText().toString();
+                final String age = signupInputAge.getText().toString();
+                final String pw = signupInputPassword.getText().toString();
+                if (mail.isEmpty() || name.isEmpty() || age.isEmpty() || pw.isEmpty()){
+                    showMessage(String.valueOf(R.string.missingForm));
+                    btnSignUp.setVisibility(View.VISIBLE);
+
+                }else {
+                    CreateUserAccount(mail,name,age,pw,gender);
+                }
             }
         });
         btnLinkLogin.setOnClickListener(new View.OnClickListener() {
@@ -84,6 +108,74 @@ public class RegisterActivity extends AppCompatActivity {
                 startActivity(i);
             }
         });
+    }
+
+    private void CreateUserAccount(final String mail, final String name, final String age, String pw, final String gender) {
+          fAuth.createUserWithEmailAndPassword(mail,pw).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+              @Override
+              public void onComplete(@NonNull Task<AuthResult> task) {
+                  if(task.isSuccessful()){
+                    showMessage(String.valueOf(R.string.success));
+                    updateUserInfo(fAuth.getCurrentUser(),name,age,gender,pickedImage);
+                  }else{
+                      showMessage(String.valueOf(R.string.register_failed)+task.getException().getMessage());
+                      btnSignUp.setVisibility(View.VISIBLE);
+                  }
+              }
+          });
+
+    }
+
+    private void updateUserInfo(final FirebaseUser currentUser, final String name, String age, String gender, Uri userPhoto) {
+        StorageReference st = FirebaseStorage.getInstance().getReference().child("User_photo");
+        final StorageReference imgFilePath = st.child(pickedImage.getLastPathSegment());
+        imgFilePath.putFile(pickedImage).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+
+                imgFilePath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        UserProfileChangeRequest profileUpdate = new UserProfileChangeRequest.Builder().setDisplayName(name).setPhotoUri(pickedImage).build();
+                        currentUser.updateProfile(profileUpdate).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                               if (task.isSuccessful()){
+                                   showMessage(String.valueOf(R.string.success));
+                                   updateUI();
+                               }
+                               else
+                               {
+                                   showMessage(String.valueOf(R.string.err_msg_dob));
+                               }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    private void updateUI() {
+        Intent messenger = new Intent(getApplicationContext(),Messenger.class);
+        startActivity(messenger);
+        finish();
+
+    }
+
+
+    private void showMessage(String st) {
+        Toast.makeText(getApplicationContext(),st,Toast.LENGTH_SHORT);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode==RESULT_OK && requestCode == REQUESTCODE && data != null){
+           pickedImage = data.getData();
+           userPhoto.setImageURI(pickedImage);
+        }
     }
 
     private void openGallery() {
@@ -97,102 +189,14 @@ public class RegisterActivity extends AppCompatActivity {
             if (ActivityCompat.shouldShowRequestPermissionRationale(RegisterActivity.this,Manifest.permission.READ_EXTERNAL_STORAGE)){
                 Toast.makeText(RegisterActivity.this,"Please accept for required permission",Toast.LENGTH_SHORT).show();
 
-            }else {
-                ActivityCompat.requestPermissions(RegisterActivity.this, new String[](Manifest.permission.READ_EXTERNAL_STORAGE),PreqCode);
+            }else
+            {
+                ActivityCompat.requestPermissions(RegisterActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},PreqCode);
             }
         }
     }
 
-    private void submitForm() {
 
-        int selectedId = genderRadioGroup.getCheckedRadioButtonId();
-        String gender;
-        if(selectedId == R.id.female_radio_btn)
-            gender = "Female";
-        else
-            gender = "Male";
 
-        registerUser(signupInputName.getText().toString(),
-                     signupInputEmail.getText().toString(),
-                     signupInputPassword.getText().toString(),
-                     gender,
-                     signupInputAge.getText().toString());
-    }
-
-    private void registerUser(final String name,  final String email, final String password,
-                              final String gender, final String dob) {
-
-        String cancel_req_tag = "register";
-
-        progressDialog.setMessage("Adding you ...");
-        showDialog();
-
-        StringRequest strReq = new StringRequest(Request.Method.POST,
-                URL_FOR_REGISTRATION, new Response.Listener<String>() {
-
-            @Override
-            public void onResponse(String response) {
-                Log.d(TAG, "Register Response: " + response);
-                hideDialog();
-
-                try {
-                    JSONObject jObj = new JSONObject(response);
-                    boolean error = jObj.getBoolean("error");
-
-                    if (!error) {
-                        String user = jObj.getJSONObject("user").getString("name");
-                        Toast.makeText(getApplicationContext(), "Hi " + user +", You are successfully Added!", Toast.LENGTH_SHORT).show();
-
-                        // Launch login activity
-                        Intent intent = new Intent(
-                                RegisterActivity.this,
-                                LoginActivity.class);
-                        startActivity(intent);
-                        finish();
-                    } else {
-
-                        String errorMsg = jObj.getString("error_msg");
-                        Toast.makeText(getApplicationContext(),
-                                errorMsg, Toast.LENGTH_LONG).show();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "Registration Error: " + error.getMessage());
-                Toast.makeText(getApplicationContext(),
-                        error.getMessage(), Toast.LENGTH_LONG).show();
-                hideDialog();
-            }
-        }) {
-            @Override
-            protected Map<String, String> getParams() {
-                // Posting params to register url
-                Map<String, String> params = new HashMap<String, String>();
-                params.put("name", name);
-                params.put("email", email);
-                params.put("password", password);
-                params.put("gender", gender);
-                params.put("age", dob);
-                return params;
-            }
-        };
-        AppSingleton.getInstance(getApplicationContext()).addToRequestQueue(strReq, cancel_req_tag);
-    }
-
-    private void showDialog() {
-        if (!progressDialog.isShowing())
-            progressDialog.show();
-    }
-
-    private void hideDialog() {
-        if (progressDialog.isShowing())
-            progressDialog.dismiss();
-    }
 
 }

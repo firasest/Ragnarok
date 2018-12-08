@@ -15,6 +15,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 
 public class LoginActivity extends AppCompatActivity {
@@ -86,7 +87,14 @@ public class LoginActivity extends AppCompatActivity {
     private void showMessage(String st) {
         Toast.makeText(getApplicationContext(),st,Toast.LENGTH_SHORT);
     }
-
+    @Override
+    protected void onStart(){
+        super.onStart();
+        FirebaseUser user = fAuth.getCurrentUser();
+        if(user!=null){
+            updateUI();
+        }
+    }
 }
 
 

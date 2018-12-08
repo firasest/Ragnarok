@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "508800245799",
+    "firebase_url": "https://ragnarok2-8baf9.firebaseio.com",
+    "project_id": "ragnarok2-8baf9",
+    "storage_bucket": "ragnarok2-8baf9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:508800245799:android:e18e491dbc17c662",
+        "android_client_info": {
+          "package_name": "com.example.black.ragnarok2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "508800245799-odik31hv63mqmt3mq330ssjm7l8asb6k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.black.ragnarok2",
+            "certificate_hash": "584b69d25fb71c1deaed539ec6f546b8b5a7ec8d"
+          }
+        },
+        {
+          "client_id": "508800245799-mtudv6spv0dvodc0hi593qeian7pt6km.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDx5DQEUSR5KnfdCojBoc_r_VSa0d5ueRQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "508800245799-mtudv6spv0dvodc0hi593qeian7pt6km.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
